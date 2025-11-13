@@ -1,32 +1,48 @@
-# 🛒 E-Commerce Sales Analytics Pipeline
+# 🛒 E-Commerce Sales Analytics Pipeline (PySpark + PostgreSQL)
 
-This project demonstrates an end-to-end **batch ETL and analytics pipeline** for e-commerce sales data using **Python, Pandas, and SQL**.  
-It processes raw order, customer, and product datasets and produces curated analytical outputs useful for business decisions.
+This project builds an end-to-end **batch ETL pipeline** for e-commerce sales data using **PySpark** and **PostgreSQL**.  
+It processes raw orders, customers, and product datasets and generates analytical aggregations, which are then loaded into PostgreSQL.
+
+---
+
+## 🧠 Overview
+
+The pipeline processes three raw datasets:
+
+- `orders.csv` (order details)
+- `customers.json` (customer master)
+- `products.json` (product catalog)
+
+It then produces insights such as:
+
+- Total revenue per category  
+- Total revenue per customer  
+- Top products by revenue  
+
+The results are loaded into PostgreSQL tables created via `schemas.sql`.
 
 ---
 
 ## 🏗️ Architecture
 
-Raw CSV/Excel Data
+Raw Data (CSV + JSON)
 ↓
-Python ETL (Extract → Transform → Load)
+PySpark Transformations
 ↓
-SQLite / SQL Database
+Aggregations (Category, Customer, Products)
 ↓
-Analytics & Reports
+PostgreSQL (agg_category, agg_customer, agg_top_products)
 
-yaml
-Copy code
 
 ---
 
 ## 🧰 Tech Stack
 
+- **PySpark** (Spark SQL + DataFrame API)
 - **Python**
-- **Pandas**
-- **SQLite (or PostgreSQL)**  
-- **SQL Queries**
-- **Jupyter / Scripts for ETL**
+- **PostgreSQL**
+- **psycopg2 + SQLAlchemy**
+- **JSON + CSV data sources**
 
 ---
 
@@ -35,85 +51,93 @@ Copy code
 ecommerce_sales_pipeline/
 │
 ├── data/
-│ ├── customers.csv
-│ ├── products.csv
+│ └── raw/
 │ ├── orders.csv
+│ ├── customers.json
+│ └── products.json
 │
 ├── scripts/
-│ ├── extract.py
-│ ├── transform.py
-│ ├── load.py
-│ ├── main.py
+│ ├── transform_spark.py # PySpark transformations & aggregations
+│ ├── load_postgres.py # Loads aggregated results into PostgreSQL
+│ └── main.py # Orchestrator: runs transform → load
 │
-├── analytics/
-│ ├── sales_by_category.sql
-│ ├── top_customers.sql
-│ ├── revenue_by_month.sql
+├── config/
+│ └── db_config.py # PostgreSQL credentials
 │
-├── output/
-│ ├── final_sales_report.csv
-│ ├── enriched_orders.csv
+├── schemas.sql # SQL schema for output tables
 │
 ├── requirements.txt
 └── README.md
 
-yaml
-Copy code
 
 ---
 
 ## 🧰 Setup Instructions
 
 ```bash
-## 1️⃣ Install dependencies
+# 1️⃣ Install Dependencies
 pip install -r requirements.txt
 
-## 2️⃣ Run complete ETL pipeline
+# 2️⃣ Start PostgreSQL and create required tables
+psql -U postgres -d ecommerce_db -f schemas.sql
+
+# 3️⃣ Run PySpark Transformation
+python scripts/transform_spark.py
+
+# 4️⃣ Load Aggregations into PostgreSQL
+python scripts/load_postgres.py
+
+# 5️⃣ (Optional) Run Full Pipeline (Transform + Load)
 python scripts/main.py
 
-## 3️⃣ View final analytics output
-open output/final_sales_report.csv
-⚙️ Features & Processing Steps
-✔ Extract
-Loads CSV datasets: orders, customers, products
 
-✔ Transform
-Cleans missing values
 
-Adds calculated fields:
+🗃️ PostgreSQL Output Tables
 
-total_amount
+1. agg_category
+Column	Description
+category	Product category name
+total_revenue	Total revenue for the category
 
-profit margins
+2. agg_customer
+Column	Description
+customer_id	Unique customer ID
+customer_name	Customer full name
+customer_revenue	Total spend by that customer
 
-category-level metrics
+3. agg_top_products
+Column	Description
+product_id	Product identifier
+product_name	Product name
+revenue	Total revenue generated
 
-Joins customers + orders + products
+⚙️ PySpark Transformations Performed
 
-Performs business-level aggregations:
+Read CSV + JSON inputs
 
-total revenue
+Clean missing values
 
-top-selling categories
+Join orders → customers → products
 
-top customers
+Compute:
+total_amount = quantity × price
+category-level revenue
+customer-level revenue
+product-level revenue
 
-monthly revenue growth
+Generate 3 aggregated DataFrames:
+category insights
+customer insights
+top product insights
 
-✔ Load
-Loads curated tables into SQLite database
+💾 Example Query Results
 
-Stores reports in CSV format inside /output folder
+Top Categories
+Electronics | 42000
+Fashion     | 18500
+Home        | 12900
 
-## 📊 Sample Output
-
-customer_id	name	total_spent
-101	Neha	5400
-103	Ashok	4200
-105	Simran	3100
-
-Sales by Category
-category	revenue
-Electronics	42,000
-Fashion	18,500
-Home	12,900
+Top Customers
+Neha   | 5400
+Ashok  | 4200
+Simran | 3100
