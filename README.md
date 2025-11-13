@@ -51,7 +51,6 @@ PostgreSQL (agg_category, agg_customer, agg_top_products)
 ecommerce_sales_pipeline/
 │
 ├── data/
-│ └── raw/
 │ ├── orders.csv
 │ ├── customers.json
 │ └── products.json
